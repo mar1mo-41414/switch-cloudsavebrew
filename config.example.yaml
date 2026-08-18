@@ -1,0 +1,68 @@
+remote:
+  git_url: "git@your-gitea-or-github:youraccount/switch-savedata.git"
+  # 省略可。指定してファイルが存在すればそれを使い、なければ既定のSSH設定
+  # (~/.ssh/config, agent等)にフォールバックする。
+  deploy_key_path: "~/.ssh/switch_savedata_deploy_key"
+  # 省略可。省略時は ~/.cache/switch-cloudsavebrew/savedata-repo を使う。
+  local_cache_path: "~/.cache/switch-cloudsavebrew/savedata-repo"
+
+# NAX0(SDカードの生キャッシュ)を直接扱う場合のみ必要。JKSV相当の方式
+# (公式セーブマウントAPI経由でのエクスポート)を使う場合、セーブは既に
+# 復号済みなので keys セクションは不要。
+keys:
+  prod_keys_path: "~/.switch/prod.keys"
+  sd_seed: "00000000000000000000000000000000"
+
+# 実機の本物のNintendoアカウント(switch_uid)と、PC側各エミュレータが
+# 割り当てるローカルのプロフィールID(ryujinx_uid/eden_uid)を紐付ける。
+# この2つは無関係な別々のID体系(エミュレータがプロフィール作成時に
+# 独自採番するだけで実機のアカウントとは無関係)なので、自動推測はせず
+# ここで明示的に対応させる。クラウド側はswitch_uidを正としてsaves/
+# <title_id>/<switch_uid>/ 配下に保存する(BCAT同様アカウント非依存の
+# Device型セーブはswitch_uidの代わりに固定の"device"バケットを使う)。
+#
+# switch_uidの調べ方: switch-appの[X]アカウント一覧画面に表示される
+# 32桁hexをそのまま使う。ryujinx_uid/eden_uidの調べ方: `scsb scan list`
+# (またはGUIのScanタブ)の出力に表示される "local account uid" / "uid:"
+# をそのまま使う(該当エミュレータでそのプロフィールを一度でも使って
+# セーブを作った後でないと分からない)。
+accounts:
+  - name: "player1"
+    switch_uid: "XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX"
+    ryujinx_uid: "YYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYY"
+    eden_uid: "ZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZ"
+
+games:
+  - title_id: "0100XXXXXXXXXXXX"
+    name: "ゲームタイトル名"
+    targets:
+      # Ryujinx: セーブがディレクトリ(ばらファイル)として保存される方式。
+      # 実セーブディレクトリ(DirectorySaveDataFileSystem形式)はさらに
+      # 0/・1/ の2重化構造(duplex、電源断対策)になっているため、
+      # save_pathはそのコピーではなくsave-idディレクトリ自体を指し、
+      # is_duplex: true を付ける。JKSV相当でエクスポートした復号済み
+      # セーブ(duplex構造でない単純なディレクトリ)を使う場合は
+      # is_duplex を付けない。
+      - emulator: "ryujinx"
+        os: "linux"
+        is_duplex: true
+        save_path: "~/.config/Ryujinx/bis/user/save/XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX"
+
+      # Eden: セーブ全体が単一ファイル(独自パック形式)にまとまっている方式。
+      # is_file: true にすると、中身を解釈せずファイルごと同期する。
+      - emulator: "eden"
+        os: "windows"
+        is_file: true
+        save_path: "%APPDATA%\\eden\\nand\\user\\save\\0000000000000000\\<account-uid>\\0100XXXXXXXXXXXX\\game_save.bin"
+
+  # Device型セーブ(どうぶつの森の島データ等、アカウント非依存・コンソール
+  # 単位)の例。is_device_save: true を付けるとaccounts:の紐付けは不要で、
+  # 常にsaves/<title_id>/device/へ同期する。
+  - title_id: "0100XXXXXXXXXXX1"
+    name: "アカウント非依存ゲームの例"
+    targets:
+      - emulator: "ryujinx"
+        os: "linux"
+        is_duplex: true
+        is_device_save: true
+        save_path: "~/.config/Ryujinx/bis/user/save/XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX"

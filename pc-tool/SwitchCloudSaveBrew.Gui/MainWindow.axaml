@@ -1,0 +1,67 @@
+<Window xmlns="https://github.com/avaloniaui"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        mc:Ignorable="d" d:DesignWidth="720" d:DesignHeight="560"
+        x:Class="SwitchCloudSaveBrew.Gui.MainWindow"
+        Width="720" Height="560"
+        Title="Switch-CloudSaveBrew">
+    <DockPanel Margin="10">
+        <!-- config.yaml picker -->
+        <Grid DockPanel.Dock="Top" ColumnDefinitions="*,Auto,Auto" Margin="0,0,0,8">
+            <TextBox Grid.Column="0" Name="ConfigPathBox" PlaceholderText="path to config.yaml" />
+            <Button Grid.Column="1" Name="BrowseButton" Content="Browse…" Margin="6,0,0,0" Click="OnBrowseClick" />
+            <Button Grid.Column="2" Name="LoadButton" Content="Load" Margin="6,0,0,0" Click="OnLoadClick" />
+        </Grid>
+
+        <!-- shared status -->
+        <TextBlock DockPanel.Dock="Bottom" Name="StatusText" Text="Ready" Margin="0,8,0,0" />
+
+        <!-- shared log, visible across all tabs -->
+        <TextBox DockPanel.Dock="Bottom" Name="LogBox" Height="120" Margin="0,8,0,0"
+                 IsReadOnly="True" AcceptsReturn="True" TextWrapping="Wrap"
+                 FontFamily="monospace" VerticalContentAlignment="Top" />
+
+        <TabControl>
+            <!-- config.yaml-driven game list -->
+            <TabItem Header="Games">
+                <DockPanel Margin="0,8,0,0">
+                    <StackPanel DockPanel.Dock="Bottom" Orientation="Horizontal" Margin="0,8,0,0">
+                        <Button Name="PushButton" Content="Push (device → cloud)" Click="OnPushClick" IsEnabled="False" />
+                        <Button Name="PullButton" Content="Pull (cloud → device)" Margin="8,0,0,0" Click="OnPullClick" IsEnabled="False" />
+                    </StackPanel>
+                    <ListBox Name="GameList" SelectionChanged="OnGameSelectionChanged" />
+                </DockPanel>
+            </TabItem>
+
+            <!-- emulator root dir auto-detection, no config.yaml entry needed -->
+            <TabItem Header="Scan">
+                <DockPanel Margin="0,8,0,0">
+                    <Grid DockPanel.Dock="Top" ColumnDefinitions="Auto,*,Auto,Auto" Margin="0,0,0,8">
+                        <ComboBox Grid.Column="0" Name="ScanEmulatorBox" SelectedIndex="0" Margin="0,0,6,0">
+                            <ComboBoxItem>ryujinx</ComboBoxItem>
+                            <ComboBoxItem>eden</ComboBoxItem>
+                        </ComboBox>
+                        <TextBox Grid.Column="1" Name="ScanRootBox" PlaceholderText="emulator root directory" />
+                        <Button Grid.Column="2" Name="ScanBrowseButton" Content="Browse…" Margin="6,0,0,0" Click="OnScanBrowseClick" />
+                        <Button Grid.Column="3" Name="ScanButton" Content="Scan" Margin="6,0,0,0" Click="OnScanClick" />
+                    </Grid>
+                    <StackPanel DockPanel.Dock="Bottom" Orientation="Horizontal" Margin="0,8,0,0">
+                        <Button Name="ScanPushButton" Content="Push (device → cloud)" Click="OnScanPushClick" IsEnabled="False" />
+                        <Button Name="ScanPullButton" Content="Pull (cloud → device)" Margin="8,0,0,0" Click="OnScanPullClick" IsEnabled="False" />
+                    </StackPanel>
+                    <ListBox Name="ScanList" SelectionChanged="OnScanSelectionChanged" />
+                </DockPanel>
+            </TabItem>
+
+            <!-- read-only view of what's in the switch-savedata repo -->
+            <TabItem Header="Cloud">
+                <DockPanel Margin="0,8,0,0">
+                    <Button DockPanel.Dock="Top" Name="CloudRefreshButton" Content="Refresh" Margin="0,0,0,8"
+                            HorizontalAlignment="Left" Click="OnCloudRefreshClick" />
+                    <ListBox Name="CloudList" />
+                </DockPanel>
+            </TabItem>
+        </TabControl>
+    </DockPanel>
+</Window>

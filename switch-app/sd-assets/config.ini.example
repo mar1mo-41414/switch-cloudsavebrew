@@ -1,0 +1,15 @@
+; Copy this to sdmc:/switch/switch-cloudsavebrew/config.ini (on the SD card)
+; and fill in your own token.
+
+[remote]
+api_base=https://your-gitea-instance.example/api/v1
+owner=your-username
+repo=switch-savedata
+token=CHANGE_ME_GITEA_ACCESS_TOKEN
+
+; title_id=display name. title_id must match the hex casing used by the PC
+; tool's config.yaml for the same game (saves/<title_id>/... in the repo is
+; case-sensitive as a URL path).
+[games]
+01006A800016E000=Super Smash Bros. Ultimate
+0100D9F01D474000=Rhythm Paradise Groove

@@ -1,0 +1,5 @@
+<Solution>
+  <Project Path="SwitchCloudSaveBrew.Cli/SwitchCloudSaveBrew.Cli.csproj" />
+  <Project Path="SwitchCloudSaveBrew.Core/SwitchCloudSaveBrew.Core.csproj" />
+  <Project Path="SwitchCloudSaveBrew.Gui/SwitchCloudSaveBrew.Gui.csproj" />
+</Solution>

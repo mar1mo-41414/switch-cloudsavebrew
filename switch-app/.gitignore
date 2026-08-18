@@ -1,0 +1,8 @@
+build/
+*.nro
+*.elf
+*.nacp
+*.pfs0
+*.nso
+*.npdm
+sd-assets/config.ini
