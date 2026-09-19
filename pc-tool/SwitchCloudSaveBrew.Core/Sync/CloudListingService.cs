@@ -37,7 +37,7 @@ public static class CloudListingService
         {
             var titleId = Path.GetFileName(titleDir)!;
             var known = config.Games.FirstOrDefault(g => g.TitleId.Equals(titleId, StringComparison.OrdinalIgnoreCase));
-            var name = known?.Name ?? "(not in this config.yaml)";
+            var name = known?.Name ?? L.Pick("(not in this config.yaml)", "(このconfig.yamlには無い)");
 
             foreach (var accountDir in Directory.EnumerateDirectories(titleDir).OrderBy(d => d))
             {

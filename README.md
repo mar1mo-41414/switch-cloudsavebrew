@@ -7,7 +7,13 @@ PCのエミュレータで、PCで遊んだ続きを実機で、そのまま遊�
 セーブデータ本体は、このリポジトリとは**別のプライベートなGitリポジトリ**に置く。
 このリポジトリ自体にはツールのソースコードだけが入っている。
 
+ビルド済みのバイナリ(PC側CLI/GUIのWindows/Linux/Mac向け実行ファイル、Switch実機用
+`.nro`)は[Releases](../../releases)ページから直接ダウンロードできる。自分でビルド
+したい場合は下記「セットアップ」を参照。
+
 ## できること
+
+- 表示言語は英語/日本語を切り替え可能(既定は英語)
 
 - 実機 ⇔ PC(Ryujinx/Eden、Windows/Linux/Mac)間でのセーブの相互同期
 - セーブデータの自動検出(手動でのパス設定なしでも、実機・エミュどちらからでも
@@ -80,8 +86,9 @@ dotnet run --project SwitchCloudSaveBrew.Gui
 ```
 
 Games(config.yamlのゲーム一覧からPush/Pull)・Scan(自動検出)・Cloud(リポジトリの
-中身を参照)の3タブ構成。ビルド済みバイナリが欲しい場合は、プロジェクトルートの
-`build.sh`(Linux/Mac)・`build.ps1`(Windows)で単体実行ファイルを`output/`に生成できる。
+中身を参照)の3タブ構成。右上のドロップダウンで表示言語(English/日本語)を切り替え
+られる。自分でビルドする場合は、プロジェクトルートの`build.sh`(Linux/Mac)・
+`build.ps1`(Windows)で単体実行ファイルを`output/`に生成できる。
 
 ## 複数アカウント対応
 

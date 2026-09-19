@@ -1,4 +1,5 @@
 #include "config.h"
+#include "l10n.h"
 #include <stdio.h>
 #include <string.h>
 #include <stdlib.h>
@@ -26,9 +27,11 @@ bool configLoad(Config *cfg, char *err_out, size_t err_out_len)
     if (!f)
     {
         if (err_out)
-            snprintf(err_out, err_out_len, "config not found:\n%s", CONFIG_PATH);
+            snprintf(err_out, err_out_len, L("config not found:\n%s", "configが見つかりません:\n%s"), CONFIG_PATH);
         return false;
     }
+
+    strcpy(cfg->language, "en");
 
     char line[512];
     char section[32] = "";
@@ -69,6 +72,11 @@ bool configLoad(Config *cfg, char *err_out, size_t err_out_len)
             else if (strcmp(key, "token") == 0)
                 copy_field(cfg->token, sizeof(cfg->token), value);
         }
+        else if (strcmp(section, "ui") == 0)
+        {
+            if (strcmp(key, "language") == 0)
+                copy_field(cfg->language, sizeof(cfg->language), value);
+        }
         else if (strcmp(section, "games") == 0)
         {
             if (cfg->game_count >= CONFIG_MAX_GAMES)
@@ -87,14 +95,16 @@ bool configLoad(Config *cfg, char *err_out, size_t err_out_len)
     if (cfg->api_base[0] == '\0' || cfg->owner[0] == '\0' || cfg->repo[0] == '\0' || cfg->token[0] == '\0')
     {
         if (err_out)
-            snprintf(err_out, err_out_len, "config missing [remote] fields\n(api_base/owner/repo/token)");
+            snprintf(err_out, err_out_len, L(
+                "config missing [remote] fields\n(api_base/owner/repo/token)",
+                "config の[remote]項目が不足しています\n(api_base/owner/repo/token)"));
         return false;
     }
 
     if (cfg->game_count == 0)
     {
         if (err_out)
-            snprintf(err_out, err_out_len, "config has no [games] entries");
+            snprintf(err_out, err_out_len, L("config has no [games] entries", "configに[games]のエントリがありません"));
         return false;
     }
 

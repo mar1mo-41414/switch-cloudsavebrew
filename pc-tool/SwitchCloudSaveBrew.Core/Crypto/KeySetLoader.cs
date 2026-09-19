@@ -9,13 +9,15 @@ public static class KeySetLoader
     {
         var prodKeysPath = PathUtil.Expand(config.ProdKeysPath);
         if (!File.Exists(prodKeysPath))
-            throw new FileNotFoundException($"prod.keys not found: {prodKeysPath}", prodKeysPath);
+            throw new FileNotFoundException(L.Pick($"prod.keys not found: {prodKeysPath}", $"prod.keysが見つかりません: {prodKeysPath}"), prodKeysPath);
 
         var keySet = KeySet.CreateDefaultKeySet();
         ExternalKeyReader.ReadKeyFile(keySet, prodKeysPath, null, null, logger: null);
 
         if (string.IsNullOrWhiteSpace(config.SdSeed))
-            throw new InvalidOperationException("keys.sd_seed is required to unwrap NAX0-encrypted SD save data");
+            throw new InvalidOperationException(L.Pick(
+                "keys.sd_seed is required to unwrap NAX0-encrypted SD save data",
+                "NAX0暗号化されたSDカードのセーブを復号するにはkeys.sd_seedが必要です"));
 
         keySet.SetSdSeed(ParseHex(config.SdSeed));
         keySet.DeriveSdCardKeys();
@@ -27,7 +29,7 @@ public static class KeySetLoader
     {
         hex = hex.Trim();
         if (hex.Length % 2 != 0)
-            throw new FormatException("sd_seed must be an even-length hex string");
+            throw new FormatException(L.Pick("sd_seed must be an even-length hex string", "sd_seedは偶数桁のhex文字列である必要があります"));
 
         var bytes = new byte[hex.Length / 2];
         for (var i = 0; i < bytes.Length; i++)

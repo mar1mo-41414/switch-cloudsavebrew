@@ -52,8 +52,9 @@ public sealed class RepoSync(RemoteConfig remote)
     {
         var (exitCode, stdout, stderr) = RunCore(workingDir, args);
         if (exitCode != 0)
-            throw new InvalidOperationException(
-                $"git {string.Join(' ', args)} failed (exit {exitCode}):\n{stdout}\n{stderr}");
+            throw new InvalidOperationException(L.Pick(
+                $"git {string.Join(' ', args)} failed (exit {exitCode}):\n{stdout}\n{stderr}",
+                $"git {string.Join(' ', args)} が失敗しました (exit {exitCode}):\n{stdout}\n{stderr}"));
     }
 
     private (int ExitCode, string Stdout, string Stderr) RunCore(string? workingDir, params string[] args)

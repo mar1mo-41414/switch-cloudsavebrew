@@ -23,8 +23,9 @@ public static class FileMirror
     {
         var files = Directory.EnumerateFiles(sourceDataDir).ToList();
         if (files.Count != 1)
-            throw new InvalidOperationException(
-                $"expected exactly one file in {sourceDataDir} for a file-mode target, found {files.Count}");
+            throw new InvalidOperationException(L.Pick(
+                $"expected exactly one file in {sourceDataDir} for a file-mode target, found {files.Count}",
+                $"is_file設定のターゲットとして{sourceDataDir}にはファイルが1つだけあるはずですが、{files.Count}個見つかりました"));
 
         Directory.CreateDirectory(Path.GetDirectoryName(destFile)!);
         File.Copy(files[0], destFile, overwrite: true);

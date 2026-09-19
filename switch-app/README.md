@@ -62,6 +62,8 @@ sdmc:/switch/switch-cloudsavebrew/config.ini   <- sd-assets/config.ini.example �
   - A: Push (実機のセーブをGiteaへ)
   - Y: Pull (Giteaの最新をセーブへ書き戻す。上書き前に確認あり)
   - B: 戻る
+- -: 表示言語をEnglish/日本語で切り替え(`config.ini`の`[ui] language=`でも指定可、
+  既定は英語)
 - +: 終了
 
 自動検出は実機上の全セーブから、通常のプロファイル別セーブと、どうぶつの森の島データ

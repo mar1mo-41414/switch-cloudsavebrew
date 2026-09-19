@@ -1,3 +1,7 @@
+# 省略可。"en"(既定)または"ja"。CLIの出力言語を切り替える(GUIはウィンドウ右上の
+# ドロップダウンで独立して切り替え、こちらの設定とは連動しない)。
+language: "en"
+
 remote:
   git_url: "git@your-gitea-or-github:youraccount/switch-savedata.git"
   # 省略可。指定してファイルが存在すればそれを使い、なければ既定のSSH設定
@@ -27,7 +31,7 @@ keys:
 # をそのまま使う(該当エミュレータでそのプロフィールを一度でも使って
 # セーブを作った後でないと分からない)。
 accounts:
-  - name: "player1"
+  - name: "markun"
     switch_uid: "XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX"
     ryujinx_uid: "YYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYY"
     eden_uid: "ZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZ"

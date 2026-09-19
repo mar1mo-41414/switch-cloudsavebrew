@@ -1,4 +1,5 @@
 #include "gitea_api.h"
+#include "l10n.h"
 #include <curl/curl.h>
 #include <json-c/json.h>
 #include <mbedtls/base64.h>
@@ -95,7 +96,7 @@ bool giteaGetFile(const Config *cfg, const char *repoPath,
     CURL *curl = make_request(cfg, &headers);
     if (!curl)
     {
-        if (err) snprintf(err, errLen, "curl_easy_init failed");
+        if (err) snprintf(err, errLen, "%s", L("curl_easy_init failed", "curl_easy_init失敗"));
         return false;
     }
 
@@ -115,13 +116,13 @@ bool giteaGetFile(const Config *cfg, const char *repoPath,
 
     if (res != CURLE_OK)
     {
-        if (err) snprintf(err, errLen, "curl error: %s", curl_easy_strerror(res));
+        if (err) snprintf(err, errLen, L("curl error: %s", "curlエラー: %s"), curl_easy_strerror(res));
         free(buf.data);
         return false;
     }
     if (httpCode != 200)
     {
-        if (err) snprintf(err, errLen, "GET %s: HTTP %ld", repoPath, httpCode);
+        if (err) snprintf(err, errLen, L("GET %s: HTTP %ld", "GET %s: HTTP %ld (エラー)"), repoPath, httpCode);
         free(buf.data);
         return false;
     }
@@ -130,14 +131,14 @@ bool giteaGetFile(const Config *cfg, const char *repoPath,
     free(buf.data);
     if (!root)
     {
-        if (err) snprintf(err, errLen, "GET %s: bad JSON", repoPath);
+        if (err) snprintf(err, errLen, L("GET %s: bad JSON", "GET %s: JSON不正"), repoPath);
         return false;
     }
 
     json_object *contentObj;
     if (!json_object_object_get_ex(root, "content", &contentObj))
     {
-        if (err) snprintf(err, errLen, "GET %s: no content field", repoPath);
+        if (err) snprintf(err, errLen, L("GET %s: no content field", "GET %s: contentフィールドが無い"), repoPath);
         json_object_put(root);
         return false;
     }
@@ -153,7 +154,7 @@ bool giteaGetFile(const Config *cfg, const char *repoPath,
 
     if (rc != 0)
     {
-        if (err) snprintf(err, errLen, "GET %s: base64 decode failed", repoPath);
+        if (err) snprintf(err, errLen, L("GET %s: base64 decode failed", "GET %s: base64デコード失敗"), repoPath);
         free(decoded);
         return false;
     }
@@ -192,7 +193,7 @@ int giteaListDir(const Config *cfg, const char *repoPath,
     }
     if (httpCode != 200)
     {
-        if (err) snprintf(err, errLen, "GET %s: HTTP %ld", repoPath, httpCode);
+        if (err) snprintf(err, errLen, L("GET %s: HTTP %ld", "GET %s: HTTP %ld (エラー)"), repoPath, httpCode);
         free(buf.data);
         return -1;
     }
@@ -201,7 +202,7 @@ int giteaListDir(const Config *cfg, const char *repoPath,
     free(buf.data);
     if (!root || json_object_get_type(root) != json_type_array)
     {
-        if (err) snprintf(err, errLen, "GET %s: expected a directory listing", repoPath);
+        if (err) snprintf(err, errLen, L("GET %s: expected a directory listing", "GET %s: ディレクトリ一覧を期待していた"), repoPath);
         if (root) json_object_put(root);
         return -1;
     }
@@ -278,7 +279,7 @@ bool giteaPutFile(const Config *cfg, const char *repoPath,
     size_t b64Len = 0;
     if (mbedtls_base64_encode(b64, b64Cap, &b64Len, data, len) != 0)
     {
-        if (err) snprintf(err, errLen, "base64 encode failed for %s", repoPath);
+        if (err) snprintf(err, errLen, L("base64 encode failed for %s", "base64エンコード失敗: %s"), repoPath);
         free(b64);
         return false;
     }

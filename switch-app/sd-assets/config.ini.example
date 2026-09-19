@@ -7,6 +7,11 @@ owner=your-username
 repo=switch-savedata
 token=CHANGE_ME_GITEA_ACCESS_TOKEN
 
+; "en" (default) or "ja". Can also be toggled live from the main menu
+; with [-].
+[ui]
+language=en
+
 ; title_id=display name. title_id must match the hex casing used by the PC
 ; tool's config.yaml for the same game (saves/<title_id>/... in the repo is
 ; case-sensitive as a URL path).

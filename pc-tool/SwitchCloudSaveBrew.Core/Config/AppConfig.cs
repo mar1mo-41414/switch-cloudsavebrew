@@ -6,6 +6,13 @@ public sealed class AppConfig
     public KeysConfig Keys { get; set; } = new();
     public List<GameConfig> Games { get; set; } = [];
 
+    // "en" or "ja" — drives SwitchCloudSaveBrew.Core.L.Current for CLI
+    // runs (set once at startup from this). The GUI has its own
+    // independent toggle (GuiSettings.Language) instead of reading this,
+    // so a shared config.yaml can drive CLI output in one language while
+    // the GUI shows another. Defaults to English when absent.
+    public string Language { get; set; } = "en";
+
     // Maps a real Switch account to that same person's local per-emulator
     // profile ids. The two are unrelated identifier namespaces — Ryujinx/
     // Eden each assign their own local profile uid when a user creates a

@@ -6,7 +6,8 @@ public static class EmulatorSaveScannerFactory
     {
         "ryujinx" => new RyujinxSaveScanner(),
         "eden" => new EdenSaveScanner(),
-        _ => throw new ArgumentException(
-            $"no auto-detect scanner for emulator '{emulator}' (supported: ryujinx, eden)"),
+        _ => throw new ArgumentException(L.Pick(
+            $"no auto-detect scanner for emulator '{emulator}' (supported: ryujinx, eden)",
+            $"エミュレータ '{emulator}' には自動検出スキャナーがありません (対応: ryujinx, eden)")),
     };
 }

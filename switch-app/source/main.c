@@ -5,6 +5,8 @@
 #include "config.h"
 #include "save_sync.h"
 #include "save_discovery.h"
+#include "text_render.h"
+#include "l10n.h"
 
 static PadState s_pad;
 
@@ -66,15 +68,15 @@ static void wait_for_a_or_b(u64 *outButton)
             *outButton = kDown;
             return;
         }
-        consoleUpdate(NULL);
+        textRenderPresent();
     }
     *outButton = 0;
 }
 
 static bool confirm_overwrite(const char *summary)
 {
-    printf("\n%s\n[A] Yes   [B] No\n", summary);
-    consoleUpdate(NULL);
+    textRenderPrintf(L("\n%s\n[A] Yes   [B] No\n", "\n%s\n[A] はい   [B] いいえ\n"), summary);
+    textRenderPresent();
 
     u64 btn;
     wait_for_a_or_b(&btn);
@@ -95,12 +97,14 @@ static bool pick_account(AccountUid *uids, char nicknames[][ACCOUNT_NICKNAME_LEN
     int cursor = 0;
     while (appletMainLoop())
     {
-        consoleClear();
-        printf("Multiple accounts have save data for this title.\nSelect one:\n\n");
+        textRenderClear();
+        textRenderPrintf(L(
+            "Multiple accounts have save data for this title.\nSelect one:\n\n",
+            "このタイトルには複数アカウント分のセーブがあります。\n選んでください:\n\n"));
         for (int i = 0; i < count; i++)
-            printf("%s %s\n", (i == cursor) ? ">" : " ", nicknames[i]);
-        printf("\n[up/down] select  [A] choose  [B] cancel\n");
-        consoleUpdate(NULL);
+            textRenderPrintf("%s %s\n", (i == cursor) ? ">" : " ", nicknames[i]);
+        textRenderPrintf(L("\n[up/down] select  [A] choose  [B] cancel\n", "\n[上下] 選択  [A] 決定  [B] キャンセル\n"));
+        textRenderPresent();
 
         padUpdate(&s_pad);
         u64 kDown = padGetButtonsDown(&s_pad);
@@ -151,23 +155,25 @@ static void show_accounts_screen(void)
     char nicknames[ACCOUNT_PICKER_MAX][ACCOUNT_NICKNAME_LEN];
     int n = listAllSystemAccounts(uids, nicknames, ACCOUNT_PICKER_MAX);
 
-    consoleClear();
-    printf("Accounts on this console:\n");
-    printf("(paste the uid into config.yaml's accounts: switch_uid)\n\n");
+    textRenderClear();
+    textRenderPrintf(L("Accounts on this console:\n", "このコンソールのアカウント一覧:\n"));
+    textRenderPrintf(L(
+        "(paste the uid into config.yaml's accounts: switch_uid)\n\n",
+        "(config.yamlのaccounts:のswitch_uidに貼り付けてください)\n\n"));
     if (n <= 0)
-        printf("(none found)\n");
+        textRenderPrintf(L("(none found)\n", "(見つかりませんでした)\n"));
     else
         for (int i = 0; i < n; i++)
-            printf("%s\n  %016lX%016lX\n\n", nicknames[i], uids[i].uid[0], uids[i].uid[1]);
-    printf("\n[B] back\n");
-    consoleUpdate(NULL);
+            textRenderPrintf("%s\n  %016lX%016lX\n\n", nicknames[i], uids[i].uid[0], uids[i].uid[1]);
+    textRenderPrintf(L("\n[B] back\n", "\n[B] 戻る\n"));
+    textRenderPresent();
 
     while (appletMainLoop())
     {
         padUpdate(&s_pad);
         if (padGetButtonsDown(&s_pad) & HidNpadButton_B)
             return;
-        consoleUpdate(NULL);
+        textRenderPresent();
     }
 }
 
@@ -175,13 +181,13 @@ static void run_action_menu(const Config *cfg, const ConfigGame *game, AccountUi
 {
     for (;;)
     {
-        consoleClear();
-        printf("%s\n(%s%s)\n\n", game->name, game->title_id_hex,
-               game->is_device_save ? ", device save" : "");
-        printf("[A] Push (device -> cloud)\n");
-        printf("[Y] Pull (cloud -> device)\n");
-        printf("[B] Back\n");
-        consoleUpdate(NULL);
+        textRenderClear();
+        textRenderPrintf("%s\n(%s%s)\n\n", game->name, game->title_id_hex,
+               game->is_device_save ? L(", device save", "・デバイス型セーブ") : "");
+        textRenderPrintf(L("[A] Push (device -> cloud)\n", "[A] Push (実機 → クラウド)\n"));
+        textRenderPrintf(L("[Y] Pull (cloud -> device)\n", "[Y] Pull (クラウド → 実機)\n"));
+        textRenderPrintf(L("[B] Back\n", "[B] 戻る\n"));
+        textRenderPresent();
 
         while (appletMainLoop())
         {
@@ -193,15 +199,15 @@ static void run_action_menu(const Config *cfg, const ConfigGame *game, AccountUi
 
             if (kDown & HidNpadButton_A)
             {
-                printf("\nExporting + pushing...\n");
-                consoleUpdate(NULL);
+                textRenderPrintf(L("\nExporting + pushing...\n", "\nエクスポートしてpushしています...\n"));
+                textRenderPresent();
 
                 char msg[256];
                 SyncResult r = syncPush(cfg, game, uid, msg, sizeof(msg));
-                printf("%s\n", msg);
-                printf((r == SYNC_ERROR) ? "FAILED\n" : "done.\n");
-                printf("\n[A/B] continue\n");
-                consoleUpdate(NULL);
+                textRenderPrintf("%s\n", msg);
+                textRenderPrintf((r == SYNC_ERROR) ? L("FAILED\n", "失敗しました\n") : L("done.\n", "完了しました\n"));
+                textRenderPrintf(L("\n[A/B] continue\n", "\n[A/B] 続ける\n"));
+                textRenderPresent();
                 u64 b;
                 wait_for_a_or_b(&b);
                 break;
@@ -209,28 +215,49 @@ static void run_action_menu(const Config *cfg, const ConfigGame *game, AccountUi
 
             if (kDown & HidNpadButton_Y)
             {
-                printf("\nChecking cloud...\n");
-                consoleUpdate(NULL);
+                textRenderPrintf(L("\nChecking cloud...\n", "\nクラウドを確認しています...\n"));
+                textRenderPresent();
 
                 char msg[256];
                 SyncResult r = syncPull(cfg, game, uid, confirm_overwrite, msg, sizeof(msg));
-                printf("%s\n", msg);
-                printf((r == SYNC_ERROR) ? "FAILED\n" : "done.\n");
-                printf("\n[A/B] continue\n");
-                consoleUpdate(NULL);
+                textRenderPrintf("%s\n", msg);
+                textRenderPrintf((r == SYNC_ERROR) ? L("FAILED\n", "失敗しました\n") : L("done.\n", "完了しました\n"));
+                textRenderPrintf(L("\n[A/B] continue\n", "\n[A/B] 続ける\n"));
+                textRenderPresent();
                 u64 b;
                 wait_for_a_or_b(&b);
                 break;
             }
 
-            consoleUpdate(NULL);
+            textRenderPresent();
         }
     }
 }
 
 int main(int argc, char *argv[])
 {
-    consoleInit(NULL);
+    if (!textRenderInit())
+    {
+        // Fall back to the plain console if the shared font/framebuffer
+        // setup fails for some reason — ASCII-only, but better than a
+        // silent crash. g_language is still LANG_EN at this point (config
+        // hasn't loaded yet), so no need to pick between languages here.
+        consoleInit(NULL);
+        printf("text renderer init failed - falling back to plain console\n"
+               "(Japanese text will not display correctly)\n\n[+] exit\n");
+        consoleUpdate(NULL);
+        while (appletMainLoop())
+        {
+            padConfigureInput(1, HidNpadStyleSet_NpadStandard);
+            padInitializeDefault(&s_pad);
+            padUpdate(&s_pad);
+            if (padGetButtonsDown(&s_pad) & HidNpadButton_Plus)
+                break;
+            consoleUpdate(NULL);
+        }
+        consoleExit(NULL);
+        return 1;
+    }
 
     padConfigureInput(1, HidNpadStyleSet_NpadStandard);
     padInitializeDefault(&s_pad);
@@ -244,8 +271,13 @@ int main(int argc, char *argv[])
 
     if (haveConfig)
     {
-        printf("Switch-CloudSaveBrew\n\nScanning save data on this console...\n");
-        consoleUpdate(NULL);
+        g_language = (strcasecmp(cfg.language, "ja") == 0 || strcasecmp(cfg.language, "jp") == 0)
+            ? LANG_JA : LANG_EN;
+
+        textRenderPrintf(L(
+            "Switch-CloudSaveBrew\n\nScanning save data on this console...\n",
+            "Switch-CloudSaveBrew\n\nこのコンソール上のセーブデータをスキャン中...\n"));
+        textRenderPresent();
         build_menu(&cfg);
     }
 
@@ -253,14 +285,14 @@ int main(int argc, char *argv[])
 
     while (appletMainLoop())
     {
-        consoleClear();
-        printf("Switch-CloudSaveBrew\n\n");
+        textRenderClear();
+        textRenderPrintf("Switch-CloudSaveBrew\n\n");
 
         if (!haveConfig)
         {
-            printf("config error:\n%s\n\n", err);
-            printf("[+] exit\n");
-            consoleUpdate(NULL);
+            textRenderPrintf(L("config error:\n%s\n\n", "設定エラー:\n%s\n\n"), err);
+            textRenderPrintf(L("[+] exit\n", "[+] 終了\n"));
+            textRenderPresent();
 
             padUpdate(&s_pad);
             if (padGetButtonsDown(&s_pad) & HidNpadButton_Plus)
@@ -270,10 +302,15 @@ int main(int argc, char *argv[])
 
         if (s_menu_count == 0)
         {
-            printf("No games configured, and no save data found on this\n");
-            printf("console to auto-detect. Add entries under [games] in\n");
-            printf("config.ini, or run a game once first.\n\n[+] exit\n");
-            consoleUpdate(NULL);
+            textRenderPrintf(L(
+                "No games configured, and no save data found on this\n"
+                "console to auto-detect. Add entries under [games] in\n"
+                "config.ini, or run a game once first.\n\n[+] exit\n",
+                "ゲームが設定されておらず、自動検出できるセーブ\n"
+                "データも見つかりませんでした。config.iniの\n"
+                "[games]に追加するか、一度ゲームを起動してから\n"
+                "試してください。\n\n[+] 終了\n"));
+            textRenderPresent();
 
             padUpdate(&s_pad);
             if (padGetButtonsDown(&s_pad) & HidNpadButton_Plus)
@@ -283,11 +320,14 @@ int main(int argc, char *argv[])
 
         for (int i = 0; i < s_menu_count; i++)
         {
-            printf("%s %s%s\n", (i == cursor) ? ">" : " ",
-                   s_menu[i].from_config ? "" : "[auto] ", s_menu[i].game.name);
+            textRenderPrintf("%s %s%s\n", (i == cursor) ? ">" : " ",
+                   s_menu[i].from_config ? "" : L("[auto] ", "[自動] "), s_menu[i].game.name);
         }
-        printf("\n[up/down] select  [A] open  [X] accounts  [+] exit\n");
-        consoleUpdate(NULL);
+        textRenderPrintf(L(
+            "\n[up/down] select  [A] open  [X] accounts  [-] %s  [+] exit\n",
+            "\n[上下] 選択  [A] 開く  [X] アカウント一覧  [-] %s  [+] 終了\n"),
+            g_language == LANG_JA ? "English" : "日本語");
+        textRenderPresent();
 
         padUpdate(&s_pad);
         u64 kDown = padGetButtonsDown(&s_pad);
@@ -298,6 +338,8 @@ int main(int argc, char *argv[])
             cursor = (cursor + 1) % s_menu_count;
         if (kDown & HidNpadButton_AnyUp)
             cursor = (cursor - 1 + s_menu_count) % s_menu_count;
+        if (kDown & HidNpadButton_Minus)
+            g_language = (g_language == LANG_JA) ? LANG_EN : LANG_JA;
         if (kDown & HidNpadButton_X)
             show_accounts_screen();
         if (kDown & HidNpadButton_A)
@@ -309,6 +351,6 @@ int main(int argc, char *argv[])
     }
 
     socketExit();
-    consoleExit(NULL);
+    textRenderExit();
     return 0;
 }

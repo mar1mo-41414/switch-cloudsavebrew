@@ -4,12 +4,13 @@
         Width="420" SizeToContent="Height"
         CanResize="False"
         WindowStartupLocation="CenterOwner"
-        Title="Confirm overwrite">
+        Title="Confirm overwrite"
+        Name="Root">
     <StackPanel Margin="16" Spacing="12">
         <TextBlock Name="MessageText" TextWrapping="Wrap" />
         <StackPanel Orientation="Horizontal" HorizontalAlignment="Right" Spacing="8">
-            <Button Content="Cancel" Click="OnCancelClick" />
-            <Button Content="Overwrite" Click="OnConfirmClick" />
+            <Button Name="CancelButton" Content="Cancel" Click="OnCancelClick" />
+            <Button Name="OverwriteButton" Content="Overwrite" Click="OnConfirmClick" />
         </StackPanel>
     </StackPanel>
 </Window>

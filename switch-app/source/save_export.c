@@ -1,4 +1,5 @@
 #include "save_export.h"
+#include "l10n.h"
 #include <switch.h>
 #include <stdio.h>
 #include <string.h>
@@ -71,7 +72,7 @@ static bool mirror_copy(const char *srcRoot, const char *dstRoot, char *err, siz
     if (!d)
     {
         if (err)
-            snprintf(err, errLen, "opendir failed: %s", srcRoot);
+            snprintf(err, errLen, L("opendir failed: %s", "opendir失敗: %s"), srcRoot);
         return false;
     }
 
@@ -102,7 +103,7 @@ static bool mirror_copy(const char *srcRoot, const char *dstRoot, char *err, siz
             if (!copy_file(srcPath, dstPath))
             {
                 if (err)
-                    snprintf(err, errLen, "copy failed: %s", entry->d_name);
+                    snprintf(err, errLen, L("copy failed: %s", "コピー失敗: %s"), entry->d_name);
                 closedir(d);
                 return false;
             }
@@ -155,7 +156,7 @@ bool saveExport(uint64_t titleId, bool isDeviceSave, AccountUid uid, const char 
     if (R_FAILED(rc))
     {
         if (err)
-            snprintf(err, errLen, "mount (ro) failed: 0x%x\n(no save data for this title/account?)", rc);
+            snprintf(err, errLen, L("mount (ro) failed: 0x%x\n(no save data for this title/account?)", "マウント(読取)失敗: 0x%x\n(このタイトル/アカウントのセーブが無い?)"), rc);
         return false;
     }
 
@@ -180,7 +181,7 @@ bool saveImport(uint64_t titleId, bool isDeviceSave, AccountUid uid, const char 
     if (R_FAILED(rc))
     {
         if (err)
-            snprintf(err, errLen, "mount (rw) failed: 0x%x\n(has this title been run once yet?)", rc);
+            snprintf(err, errLen, L("mount (rw) failed: 0x%x\n(has this title been run once yet?)", "マウント(書込)失敗: 0x%x\n(一度もこのタイトルを起動していない?)"), rc);
         return false;
     }
 
@@ -192,7 +193,7 @@ bool saveImport(uint64_t titleId, bool isDeviceSave, AccountUid uid, const char 
         {
             ok = false;
             if (err)
-                snprintf(err, errLen, "commit failed: 0x%x", rc);
+                snprintf(err, errLen, L("commit failed: 0x%x", "コミット失敗: 0x%x"), rc);
         }
     }
 

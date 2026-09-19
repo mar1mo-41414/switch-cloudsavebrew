@@ -11,17 +11,10 @@ static bool already_seen(const DiscoveredGame *out, int count, uint64_t titleId)
     return false;
 }
 
-static bool is_ascii(const char *s)
-{
-    for (const unsigned char *p = (const unsigned char *)s; *p; p++)
-        if (*p >= 0x80)
-            return false;
-    return true;
-}
-
 static void resolve_name(uint64_t titleId, char *nameOut, size_t nameOutLen)
 {
-    // Fallback if ns lookup fails, or no ASCII-safe name is found below.
+    // Fallback if ns lookup fails, or the NACP has no name at all for the
+    // system's current language.
     snprintf(nameOut, nameOutLen, "%016lX", titleId);
 
     static NsApplicationControlData controlData;
@@ -31,36 +24,17 @@ static void resolve_name(uint64_t titleId, char *nameOut, size_t nameOutLen)
     if (R_FAILED(rc))
         return;
 
-    // consoleInit's built-in bitmap font only has glyphs for a Latin/
-    // extended-ASCII-ish charset — non-ASCII UTF-8 bytes (e.g. Japanese
-    // titles, which NACP stores correctly as UTF-8) render as garbage
-    // rather than being decoded. NACP ships the title in up to 16
-    // languages (NacpLanguageEntry indices follow SetLanguage); prefer
-    // whatever the console's language setting picked, but fall back to an
-    // English entry (present in most titles' metadata even when the game
-    // itself isn't localized) if that one isn't ASCII-safe, rather than
-    // showing mojibake. If nothing ASCII-safe exists at all (JP-exclusive
-    // titles with no English NACP entry), the hex title_id set above is
-    // shown instead.
+    // text_render.c rasterizes glyphs from the console's own shared system
+    // font (the same one Nintendo's own Japanese UI uses), so unlike
+    // consoleInit's built-in ASCII-only bitmap font, non-Latin NACP names
+    // (Japanese, etc.) render correctly here — just use whatever the
+    // console's language setting picked directly, no ASCII fallback
+    // needed.
     NacpLanguageEntry *lang = NULL;
     nacpGetLanguageEntry(&controlData.nacp, &lang);
 
-    if (lang && lang->name[0] != '\0' && is_ascii(lang->name))
-    {
+    if (lang && lang->name[0] != '\0')
         snprintf(nameOut, nameOutLen, "%s", lang->name);
-        return;
-    }
-
-    static const SetLanguage asciiFallbackOrder[] = { SetLanguage_ENUS, SetLanguage_ENGB };
-    for (size_t i = 0; i < sizeof(asciiFallbackOrder) / sizeof(asciiFallbackOrder[0]); i++)
-    {
-        NacpLanguageEntry *entry = &controlData.nacp.lang[asciiFallbackOrder[i]];
-        if (entry->name[0] != '\0' && is_ascii(entry->name))
-        {
-            snprintf(nameOut, nameOutLen, "%s", entry->name);
-            return;
-        }
-    }
 }
 
 int discoverGames(DiscoveredGame *out, int maxGames)

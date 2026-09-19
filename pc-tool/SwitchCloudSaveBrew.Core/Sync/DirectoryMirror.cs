@@ -84,7 +84,9 @@ public static class DirectoryMirror
         if (has0 && !has1) return dir0;
         if (has1 && !has0) return dir1;
         if (!has0 && !has1)
-            throw new DirectoryNotFoundException($"no duplex copy (0/ or 1/) found under {saveIdDir}");
+            throw new DirectoryNotFoundException(L.Pick(
+                $"no duplex copy (0/ or 1/) found under {saveIdDir}",
+                $"{saveIdDir} 配下にduplexコピー(0/または1/)が見つかりません"));
 
         return LatestWriteTimeUtc(dir1) > LatestWriteTimeUtc(dir0) ? dir1 : dir0;
     }

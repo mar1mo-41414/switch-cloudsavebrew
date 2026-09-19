@@ -45,9 +45,9 @@ public static class SaveSyncService
     {
         var savePath = PathUtil.Expand(target.SavePath);
         if (target.IsFile && !File.Exists(savePath))
-            throw new FileNotFoundException($"save file not found: {savePath}", savePath);
+            throw new FileNotFoundException(L.Pick($"save file not found: {savePath}", $"セーブファイルが見つかりません: {savePath}"), savePath);
         if (!target.IsFile && !Directory.Exists(savePath))
-            throw new DirectoryNotFoundException($"save directory not found: {savePath}");
+            throw new DirectoryNotFoundException(L.Pick($"save directory not found: {savePath}", $"セーブディレクトリが見つかりません: {savePath}"));
 
         var accountSegment = AccountUidResolver.ResolveSegment(config, target);
 
@@ -66,7 +66,7 @@ public static class SaveSyncService
         var remoteState = SyncStateStore.TryLoad(repoStatePath);
 
         if (remoteState is not null && remoteState.ContentHash == localHash)
-            return new PushResult { Status = SyncStatus.UpToDate, Message = "no changes, nothing to push" };
+            return new PushResult { Status = SyncStatus.UpToDate, Message = L.Pick("no changes, nothing to push", "変更なし、pushするものがありません") };
 
         var newState = new SyncState
         {
@@ -92,8 +92,10 @@ public static class SaveSyncService
         SyncStateStore.Save(LocalStateCache.PathFor(titleId, accountSegment, target.Emulator, target.Os), newState);
 
         return pushed
-            ? new PushResult { Status = SyncStatus.Ok, Message = $"pushed gen {newState.Generation}", Generation = newState.Generation }
-            : new PushResult { Status = SyncStatus.UpToDate, Message = "committed nothing new (hash matched after mirroring — no-op)" };
+            ? new PushResult { Status = SyncStatus.Ok, Message = L.Pick($"pushed gen {newState.Generation}", $"gen {newState.Generation} をpushしました"), Generation = newState.Generation }
+            : new PushResult { Status = SyncStatus.UpToDate, Message = L.Pick(
+                "committed nothing new (hash matched after mirroring — no-op)",
+                "コミットする変更はありませんでした(ミラー後にハッシュが一致 — 何もしていません)") };
     }
 
     // confirmOverwrite is called only when there's actually something newer
@@ -109,13 +111,15 @@ public static class SaveSyncService
         var repoStatePath = Path.Combine(repo.LocalPath, "saves", titleId, accountSegment, "state.json");
 
         var remoteState = SyncStateStore.TryLoad(repoStatePath)
-            ?? throw new InvalidOperationException($"no data in repo yet for {titleId} ({accountSegment}) — push from somewhere first");
+            ?? throw new InvalidOperationException(L.Pick(
+                $"no data in repo yet for {titleId} ({accountSegment}) — push from somewhere first",
+                $"{titleId} ({accountSegment}) のデータはまだリポジトリにありません — どこかからpushしてください"));
 
         var localCachePath = LocalStateCache.PathFor(titleId, accountSegment, target.Emulator, target.Os);
         var localKnown = SyncStateStore.TryLoad(localCachePath);
 
         if (localKnown is not null && localKnown.Generation >= remoteState.Generation)
-            return new PullResult { Status = SyncStatus.UpToDate, Message = $"already up to date (gen {localKnown.Generation})", Generation = localKnown.Generation };
+            return new PullResult { Status = SyncStatus.UpToDate, Message = L.Pick($"already up to date (gen {localKnown.Generation})", $"既に最新です (gen {localKnown.Generation})"), Generation = localKnown.Generation };
 
         var savePath = PathUtil.Expand(target.SavePath);
 
@@ -127,7 +131,7 @@ public static class SaveSyncService
             SavePath = savePath,
         });
         if (!proceed)
-            return new PullResult { Status = SyncStatus.Aborted, Message = "aborted" };
+            return new PullResult { Status = SyncStatus.Aborted, Message = L.Pick("aborted", "中断しました") };
 
         if (target.IsFile)
         {
@@ -144,6 +148,8 @@ public static class SaveSyncService
         }
         SyncStateStore.Save(localCachePath, remoteState);
 
-        return new PullResult { Status = SyncStatus.Ok, Message = $"deployed gen {remoteState.Generation} to {savePath}", Generation = remoteState.Generation };
+        return new PullResult { Status = SyncStatus.Ok, Message = L.Pick(
+            $"deployed gen {remoteState.Generation} to {savePath}",
+            $"gen {remoteState.Generation} を {savePath} へ反映しました"), Generation = remoteState.Generation };
     }
 }

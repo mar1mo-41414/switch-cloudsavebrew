@@ -59,3 +59,36 @@ Giteaのcontents APIは新規ファイル作成に`POST`、既存ファイルの
 素朴な低速検出(CURLOPT_LOW_SPEED_LIMIT/TIME)は、実機Wi-Fiの瞬間的な速度低下や
 サーバー側処理の一時的な間で誤検知しうる。フラットなタイムアウト値のみに単純化する
 方が実機では安定した。
+
+## 実機での日本語表示
+
+`consoleInit`の組み込みビットマップフォントはLatin/拡張ASCII相当のグリフしか
+持たず、日本語(かな・漢字)を含む非ASCII文字は文字化けする。これを根本解決する
+ため、`consoleInit`/`printf`/`consoleUpdate`を`text_render.c`の独自実装
+(`textRenderInit`/`textRenderPrintf`/`textRenderPresent`)に置き換えた:
+
+- `plGetSharedFontByType(PlSharedFontType_Standard)`で、実機のOS自身が日本語UIに
+  使っているのと同じ共有システムフォントを取得(追加のフォントファイル同梱は不要)
+- [stb_truetype](https://github.com/nothings/stb)(public domain、
+  `switch-app/source/vendor/`に同梱)でこのフォントからグリフをラスタライズ
+- `Framebuffer` API(`framebufferCreate`+`framebufferMakeLinear`、consoleInit自体と
+  同じく1280x720の固定仮想解像度でコンポジタにスケーリングを任せる)へ直接
+  ピクセル書き込み
+- グリフはコードポイント単位でキャッシュ(固定配列、線形探索)し、毎フレーム
+  再ラスタライズしない
+
+API(`textRenderClear`/`textRenderPrintf`/`textRenderPresent`)はconsole系と概ね
+1:1対応するよう設計してあり、呼び出し側(`main.c`)は関数名の置換だけで済んでいる。
+
+## 英語/日本語の切り替え(.resx/ResourceManagerを使わない理由)
+
+.NETの標準的なローカライズ手段は`.resx`+`ResourceManager`(satelliteアセンブリ
+方式)だが、これはカルチャごとに別ファイル(別dll)を生成する仕組みのため、
+`dotnet publish -p:PublishSingleFile=true`での自己完結シングルファイル配布と
+相性が悪い(satelliteアセンブリを単一ファイルへ正しく埋め込むには追加設定が
+必要で、ビルドパイプラインが複雑になる)。
+
+そのため、PC側は`SwitchCloudSaveBrew.Core/L.cs`に`L.Pick(en, ja)`という自前の
+最小限の仕組みを用意した。switch-app側も同じ考え方で`l10n.h`の`L(en, ja)`
+インライン関数を使っている。どちらも「呼び出し箇所に英語と日本語を両方書く」
+という素朴な方式だが、追加の依存やビルド設定変更が不要で、実装も見通しやすい。

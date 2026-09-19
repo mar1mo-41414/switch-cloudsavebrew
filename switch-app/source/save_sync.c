@@ -2,6 +2,7 @@
 #include "save_export.h"
 #include "save_hash.h"
 #include "gitea_api.h"
+#include "l10n.h"
 #include <switch.h>
 #include <json-c/json.h>
 #include <stdio.h>
@@ -205,7 +206,7 @@ SyncResult syncPush(const Config *cfg, const ConfigGame *game, AccountUid uid, c
     char err[256];
     if (!saveExport(game->title_id, game->is_device_save, uid, staging, err, sizeof(err)))
     {
-        if (msg) snprintf(msg, msgLen, "export failed: %s", err);
+        if (msg) snprintf(msg, msgLen, L("export failed: %s", "エクスポート失敗: %s"), err);
         return SYNC_ERROR;
     }
 
@@ -218,7 +219,7 @@ SyncResult syncPush(const Config *cfg, const ConfigGame *game, AccountUid uid, c
 
     if (hadRemote && strcmp(localHash, remoteHash) == 0)
     {
-        if (msg) snprintf(msg, msgLen, "no changes, nothing to push");
+        if (msg) snprintf(msg, msgLen, "%s", L("no changes, nothing to push", "変更なし、pushするものがありません"));
         return SYNC_UP_TO_DATE;
     }
 
@@ -232,7 +233,7 @@ SyncResult syncPush(const Config *cfg, const ConfigGame *game, AccountUid uid, c
 
     if (!upload_dir_recursive(cfg, staging, dataPath, commitMsg, err, sizeof(err)))
     {
-        if (msg) snprintf(msg, msgLen, "upload failed: %s", err);
+        if (msg) snprintf(msg, msgLen, L("upload failed: %s", "アップロード失敗: %s"), err);
         return SYNC_ERROR;
     }
 
@@ -254,13 +255,13 @@ SyncResult syncPush(const Config *cfg, const ConfigGame *game, AccountUid uid, c
 
     if (!ok)
     {
-        if (msg) snprintf(msg, msgLen, "state.json upload failed: %s", err);
+        if (msg) snprintf(msg, msgLen, L("state.json upload failed: %s", "state.jsonのアップロード失敗: %s"), err);
         return SYNC_ERROR;
     }
 
     write_local_known_generation(game, uid, newGen);
 
-    if (msg) snprintf(msg, msgLen, "pushed gen %ld", newGen);
+    if (msg) snprintf(msg, msgLen, L("pushed gen %ld", "gen %ld をpushしました"), newGen);
     return SYNC_OK;
 }
 
@@ -320,7 +321,7 @@ static bool download_dir_recursive(const Config *cfg, const char *repoDir, const
         if (!f)
         {
             free(data);
-            if (err) snprintf(err, errLen, "fopen failed: %s", localPath);
+            if (err) snprintf(err, errLen, L("fopen failed: %s", "fopen失敗: %s"), localPath);
             return false;
         }
         fwrite(data, 1, len, f);
@@ -336,22 +337,22 @@ SyncResult syncPull(const Config *cfg, const ConfigGame *game, AccountUid uid, S
     long remoteGen = 0;
     if (!fetch_remote_state(cfg, game, uid, &remoteGen, NULL, 0))
     {
-        if (msg) snprintf(msg, msgLen, "no data in repo yet for this title/account");
+        if (msg) snprintf(msg, msgLen, "%s", L("no data in repo yet for this title/account", "このタイトル/アカウントのデータはまだリポジトリにありません"));
         return SYNC_ERROR;
     }
 
     long localKnown = read_local_known_generation(game, uid);
     if (localKnown >= remoteGen)
     {
-        if (msg) snprintf(msg, msgLen, "already up to date (gen %ld)", localKnown);
+        if (msg) snprintf(msg, msgLen, L("already up to date (gen %ld)", "既に最新です (gen %ld)"), localKnown);
         return SYNC_UP_TO_DATE;
     }
 
     char summary[128];
-    snprintf(summary, sizeof(summary), "Overwrite save with repo gen %ld?", remoteGen);
+    snprintf(summary, sizeof(summary), L("Overwrite save with repo gen %ld?", "リポジトリのgen %ld でセーブを上書きしますか?"), remoteGen);
     if (confirm && !confirm(summary))
     {
-        if (msg) snprintf(msg, msgLen, "aborted by user");
+        if (msg) snprintf(msg, msgLen, "%s", L("aborted by user", "ユーザーによって中断されました"));
         return SYNC_ERROR;
     }
 
@@ -365,18 +366,18 @@ SyncResult syncPull(const Config *cfg, const ConfigGame *game, AccountUid uid, S
     char err[256];
     if (!download_dir_recursive(cfg, dataPath, staging, err, sizeof(err)))
     {
-        if (msg) snprintf(msg, msgLen, "download failed: %s", err);
+        if (msg) snprintf(msg, msgLen, L("download failed: %s", "ダウンロード失敗: %s"), err);
         return SYNC_ERROR;
     }
 
     if (!saveImport(game->title_id, game->is_device_save, uid, staging, err, sizeof(err)))
     {
-        if (msg) snprintf(msg, msgLen, "import failed: %s", err);
+        if (msg) snprintf(msg, msgLen, L("import failed: %s", "インポート失敗: %s"), err);
         return SYNC_ERROR;
     }
 
     write_local_known_generation(game, uid, remoteGen);
 
-    if (msg) snprintf(msg, msgLen, "deployed gen %ld", remoteGen);
+    if (msg) snprintf(msg, msgLen, L("deployed gen %ld", "gen %ld を反映しました"), remoteGen);
     return SYNC_OK;
 }

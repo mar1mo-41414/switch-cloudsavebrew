@@ -1,0 +1,92 @@
+name: Release
+
+# Builds the PC tool (CLI+GUI, self-contained single-file) for Windows x64,
+# Linux x64, and Mac (Apple Silicon) arm64, plus the Switch homebrew .nro,
+# and attaches them all to a GitHub Release. Triggered by pushing a version
+# tag (v*); can also be run manually (workflow_dispatch) to sanity-check the
+# build without publishing a release.
+on:
+  push:
+    tags:
+      - "v*"
+  workflow_dispatch:
+
+jobs:
+  pc-tool:
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - os: windows-latest
+            rid: win-x64
+          - os: ubuntu-latest
+            rid: linux-x64
+          - os: macos-14 # Apple Silicon (arm64) runner
+            rid: osx-arm64
+    runs-on: ${{ matrix.os }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: "8.0.x"
+
+      - name: Build (build.ps1)
+        if: runner.os == 'Windows'
+        shell: pwsh
+        run: ./build.ps1
+
+      - name: Build (build.sh)
+        if: runner.os != 'Windows'
+        shell: bash
+        run: ./build.sh
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: pc-tool-${{ matrix.rid }}
+          path: output/*
+          if-no-files-found: error
+
+  switch-app:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Build .nro (devkitPro Docker image)
+        working-directory: switch-app
+        run: ./build.sh
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: switch-app-nro
+          path: switch-app/switch-cloudsavebrew.nro
+          if-no-files-found: error
+
+  release:
+    if: startsWith(github.ref, 'refs/tags/')
+    needs: [pc-tool, switch-app]
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/download-artifact@v4
+        with:
+          path: artifacts
+
+      - name: Package
+        run: |
+          cd artifacts
+          for d in pc-tool-*/; do
+            name="${d%/}"
+            (cd "$name" && zip -r "../${name}.zip" .)
+          done
+
+      - name: Create release
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          gh release create "${{ github.ref_name }}" \
+            artifacts/pc-tool-*.zip \
+            artifacts/switch-app-nro/switch-cloudsavebrew.nro \
+            --title "${{ github.ref_name }}" \
+            --generate-notes

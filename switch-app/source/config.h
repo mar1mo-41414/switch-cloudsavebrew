@@ -26,6 +26,10 @@ typedef struct {
 
     ConfigGame games[CONFIG_MAX_GAMES];
     int game_count;
+
+    // [ui] language= ("en" or "ja"). Read by main() to set l10n.h's
+    // g_language once at startup; defaults to English if absent/unset.
+    char language[8];
 } Config;
 
 // Loads config from SD:/switch/switch-cloudsavebrew/config.ini.
