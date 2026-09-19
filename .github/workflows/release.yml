@@ -69,6 +69,11 @@ jobs:
     permissions:
       contents: write
     steps:
+      # `gh release create --generate-notes` shells out to git to work out
+      # the changelog range, so it needs an actual repo checkout — this
+      # job otherwise only downloads artifacts, no source needed.
+      - uses: actions/checkout@v4
+
       - uses: actions/download-artifact@v4
         with:
           path: artifacts
